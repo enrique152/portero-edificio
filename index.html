@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Portero — Entrada</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="panel">
+    <p class="plate"><span class="dot" id="statusDot"></span>Portero eléctrico</p>
+    <div class="units" id="units"></div>
+  </div>
+
+  <!-- Videollamada saliente, aparece sobre el panel cuando se toca un timbre -->
+  <div class="panel hidden" id="callPanel" style="margin-top:16px;">
+    <div class="call-card">
+      <span class="unit-tag" id="callUnitTag"></span>
+      <p class="ring-word" id="callStatus">Llamando…</p>
+      <div class="videos">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
+      <div class="call-actions">
+        <button class="call-btn hangup" id="hangupBtn" title="Cortar">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="lobby.js"></script>
+</body>
+</html>

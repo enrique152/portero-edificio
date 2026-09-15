@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Portero — Timbre</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="panel">
+    <p class="plate"><span class="dot" id="statusDot"></span>Portero eléctrico</p>
+
+    <div id="startCard" class="idle-card">
+      <span class="unit-tag" id="unitTag"></span>
+      <p>Tocá el botón para avisarle al vecino que estás en la puerta.</p>
+      <button class="enable-btn" id="startBtn">Tocar timbre</button>
+    </div>
+
+    <div id="callCard" class="call-card hidden">
+      <span class="unit-tag" id="unitTagCall"></span>
+      <p class="ring-word" id="callStatus">Llamando…</p>
+      <div class="videos">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
+      <div class="call-actions">
+        <button class="call-btn hangup" id="hangupBtn" title="Cortar">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="llamar.js"></script>
+</body>
+</html>

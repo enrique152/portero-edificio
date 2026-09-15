@@ -1,0 +1,192 @@
+:root {
+  --panel-dark: #1c1e22;
+  --panel-mid: #24262b;
+  --panel-light: #2f3238;
+  --steel-edge: #3a3d44;
+  --text-bright: #edeff2;
+  --text-dim: #9aa0aa;
+  --led-idle: #4a5058;
+  --led-ring: #ffb020;
+  --led-live: #3ddc84;
+  --led-end: #e5484d;
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-plate: 'Barlow Semi Condensed', 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  background: #0e0f11;
+  color: var(--text-bright);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.panel {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(180deg, var(--panel-mid) 0%, var(--panel-dark) 100%);
+  border: 1px solid var(--steel-edge);
+  border-radius: 14px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+  padding: 28px 22px 22px;
+}
+
+.plate {
+  font-family: var(--font-plate);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 15px;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 0 0 22px;
+}
+
+.plate .dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--led-idle);
+  margin-right: 8px;
+  vertical-align: middle;
+  transition: background 0.2s;
+}
+.plate .dot.on { background: var(--led-live); box-shadow: 0 0 8px var(--led-live); }
+
+.units {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.unit-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--panel-light);
+  border: 1px solid var(--steel-edge);
+  border-radius: 9px;
+  color: var(--text-bright);
+  font-family: var(--font-plate);
+  font-size: 19px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 0.08s, background 0.15s;
+}
+.unit-btn:active { transform: translateY(1px); background: var(--panel-mid); }
+
+.unit-btn .num {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-dark);
+  border-radius: 7px;
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.unit-btn .label { flex: 1; }
+.unit-btn .ring-led {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--led-idle);
+}
+.unit-btn.calling .ring-led { background: var(--led-ring); box-shadow: 0 0 8px var(--led-ring); animation: pulse 1s infinite; }
+
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* --- Vecino / llamada --- */
+.idle-card, .call-card {
+  text-align: center;
+  padding: 10px 4px 4px;
+}
+.idle-card p { color: var(--text-dim); font-size: 14px; line-height: 1.5; margin-top: 10px; }
+
+.unit-tag {
+  display: inline-block;
+  font-family: var(--font-plate);
+  font-size: 15px;
+  color: var(--text-bright);
+  background: var(--panel-light);
+  border: 1px solid var(--steel-edge);
+  border-radius: 7px;
+  padding: 6px 14px;
+  margin-bottom: 6px;
+}
+
+.call-card .ring-word {
+  font-family: var(--font-plate);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 14px 0 4px;
+}
+
+.videos {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 14px 0;
+}
+video#remoteVideo { width: 100%; height: 100%; object-fit: cover; }
+video#localVideo {
+  position: absolute;
+  width: 84px; height: 112px;
+  right: 10px; bottom: 10px;
+  border-radius: 6px;
+  border: 2px solid var(--panel-dark);
+  object-fit: cover;
+}
+
+.call-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 6px;
+}
+.call-btn {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.call-btn.accept { background: var(--led-live); }
+.call-btn.decline { background: var(--led-end); }
+.call-btn.hangup { background: var(--led-end); }
+
+.enable-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 13px;
+  border-radius: 8px;
+  border: 1px solid var(--steel-edge);
+  background: var(--panel-light);
+  color: var(--text-bright);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+.enable-btn:disabled { opacity: 0.5; }
+
+.hidden { display: none !important; }

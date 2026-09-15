@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Portero — Mi timbre</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="panel">
+    <p class="plate"><span class="dot" id="statusDot"></span>Portero eléctrico</p>
+
+    <div id="idleCard" class="idle-card">
+      <span class="unit-tag" id="unitTag"></span>
+      <p>Esta página avisa cuando alguien toca el timbre de tu unidad. No comparte tu número de teléfono con nadie.</p>
+      <button class="enable-btn" id="enableBtn">Activar avisos de timbre</button>
+    </div>
+
+    <div id="callCard" class="call-card hidden">
+      <span class="unit-tag" id="unitTagCall"></span>
+      <p class="ring-word">Tocan el timbre</p>
+      <div class="videos hidden" id="videos">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
+      </div>
+      <div class="call-actions" id="ringActions">
+        <button class="call-btn accept" id="acceptBtn" title="Atender">✓</button>
+        <button class="call-btn decline" id="declineBtn" title="Rechazar">✕</button>
+      </div>
+      <div class="call-actions hidden" id="liveActions">
+        <button class="call-btn hangup" id="hangupBtn" title="Cortar">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="vecino.js"></script>
+</body>
+</html>
