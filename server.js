@@ -53,6 +53,24 @@ const wss = new WebSocketServer({ server });
 // { unitId: Set<ws> } — puede haber portero(s) y vecino(s) mirando la misma unidad
 const rooms = new Map();
 
+// Llamadas "sonando" ahora mismo, por unidad. Así, si el vecino recién
+// abre la página (por ejemplo al tocar la notificación push, que tarda
+// unos segundos), igual ve que lo están llamando en vez de perderse el
+// aviso que ya se mandó antes de que se conectara.
+const pendingCalls = new Map(); // unitId -> timeout handle
+const RING_TIMEOUT_MS = 45000;
+
+function startPendingCall(unit) {
+  clearPendingCall(unit);
+  const timeout = setTimeout(() => pendingCalls.delete(unit), RING_TIMEOUT_MS);
+  pendingCalls.set(unit, timeout);
+}
+function clearPendingCall(unit) {
+  const existing = pendingCalls.get(unit);
+  if (existing) clearTimeout(existing);
+  pendingCalls.delete(unit);
+}
+
 function joinRoom(unit, ws) {
   if (!rooms.has(unit)) rooms.set(unit, new Set());
   rooms.get(unit).add(ws);
@@ -86,6 +104,9 @@ wss.on('connection', (ws) => {
         ws.unit = msg.unit;
         ws.role = msg.role;
         joinRoom(msg.unit, ws);
+        if (msg.role === 'vecino' && pendingCalls.has(msg.unit)) {
+          ws.send(JSON.stringify({ type: 'incoming-call', unit: msg.unit }));
+        }
         break;
       }
 
@@ -93,6 +114,7 @@ wss.on('connection', (ws) => {
       // ya tenga la página abierta, y además disparamos un push para
       // despertar el teléfono del vecino si no la tiene abierta.
       case 'call': {
+        startPendingCall(msg.unit);
         broadcastToRoom(msg.unit, ws, { type: 'incoming-call', unit: msg.unit });
 
         const sub = subscriptions[msg.unit];
@@ -112,11 +134,21 @@ wss.on('connection', (ws) => {
         break;
       }
 
+      // El vecino avisa que atendió y ya está listo para recibir la oferta
+      case 'ready':
+        clearPendingCall(msg.unit);
+        broadcastToRoom(msg.unit, ws, msg);
+        break;
+
+      case 'hangup':
+        clearPendingCall(msg.unit);
+        broadcastToRoom(msg.unit, ws, msg);
+        break;
+
       // Señalización WebRTC estándar: se reenvía tal cual al otro extremo
       case 'offer':
       case 'answer':
       case 'ice-candidate':
-      case 'hangup':
         broadcastToRoom(msg.unit, ws, msg);
         break;
     }
