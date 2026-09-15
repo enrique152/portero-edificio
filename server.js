@@ -20,15 +20,51 @@ const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BCUyXt0R5XAYR9QW5pIvUF
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '_Jh-SyNi3_Wk874CPB-Od16yxvIuhAW2_0yYNuLgwvM';
 webpush.setVapidDetails('mailto:portero@example.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
-// --- Suscripciones push por unidad (persistidas en un JSON simple) ---
-function loadSubs() {
+// --- Suscripciones push por unidad ---
+// El plan gratuito de Render borra los archivos locales cada vez que el
+// servidor se reinicia (algo que pasa seguido por inactividad). Por eso
+// guardamos esto en Upstash (Redis gratuito con almacenamiento persistente)
+// si está configurado. Si no está configurado, usamos el archivo local como
+// respaldo para pruebas — pero en producción hace falta Upstash.
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const SUBS_KEY = 'portero_subscriptions';
+
+async function loadSubs() {
+  if (UPSTASH_URL && UPSTASH_TOKEN) {
+    try {
+      const res = await fetch(`${UPSTASH_URL}/get/${SUBS_KEY}`, {
+        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      });
+      const data = await res.json();
+      return data.result ? JSON.parse(data.result) : {};
+    } catch (err) {
+      console.error('No se pudo leer Upstash, arranco vacío:', err.message);
+      return {};
+    }
+  }
   try { return JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8')); }
   catch { return {}; }
 }
-function saveSubs(subs) {
+
+async function saveSubs(subs) {
+  if (UPSTASH_URL && UPSTASH_TOKEN) {
+    try {
+      await fetch(`${UPSTASH_URL}/set/${SUBS_KEY}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+        body: JSON.stringify(subs),
+      });
+    } catch (err) {
+      console.error('No se pudo guardar en Upstash:', err.message);
+    }
+    return;
+  }
   fs.writeFileSync(SUBS_FILE, JSON.stringify(subs, null, 2));
 }
-let subscriptions = loadSubs(); // { unitId: pushSubscriptionObject }
+
+let subscriptions = {}; // { unitId: pushSubscriptionObject }
+loadSubs().then((s) => { subscriptions = s; });
 
 const app = express();
 app.use(express.json());
@@ -38,11 +74,11 @@ app.get('/api/units', (req, res) => res.json(UNITS));
 app.get('/api/vapid-public-key', (req, res) => res.send(VAPID_PUBLIC_KEY));
 
 // El vecino guarda su suscripción push una sola vez desde su página
-app.post('/api/subscribe', (req, res) => {
+app.post('/api/subscribe', async (req, res) => {
   const { unit, subscription } = req.body;
   if (!unit || !subscription) return res.status(400).end();
   subscriptions[unit] = subscription;
-  saveSubs(subscriptions);
+  await saveSubs(subscriptions);
   res.status(204).end();
 });
 
