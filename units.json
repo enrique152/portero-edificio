@@ -1,13 +1,13 @@
 [
-  { "id": "1A", "label": "1° A" },
-  { "id": "1B", "label": "1° B" },
-  { "id": "2A", "label": "2° A" },
-  { "id": "2B", "label": "2° B" },
-  { "id": "3A", "label": "3° A" },
-  { "id": "3B", "label": "3° B" },
-  { "id": "4A", "label": "4° A" },
-  { "id": "4B", "label": "4° B" },
-  { "id": "5A", "label": "5° A" },
-  { "id": "5B", "label": "5° B" },
-  { "id": "PB", "label": "PB" }
+  { "id": "DTO 1", "label": "DTO 1" },
+  { "id": "DTO 2", "label": "DTO 2" },
+  { "id": "DTO 3", "label": "DTO 3" },
+  { "id": "DTO 4", "label": "DTO 4" },
+  { "id": "DTO 5", "label": "DTO 5" },
+  { "id": "DTO 6", "label": "DTO 6" },
+  { "id": "DTO 7", "label": "DTO 7" },
+  { "id": "DTO 8", "label": "DTO 8" },
+  { "id": "DTO 9", "label": "DTO 9" },
+  { "id": "DTO 10", "label": "DTO 10" },
+  { "id": "ADMINISTRADOR", "label": "ADMINISTRADOR" }
 ]
