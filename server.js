@@ -58,7 +58,7 @@ const rooms = new Map();
 // unos segundos), igual ve que lo están llamando en vez de perderse el
 // aviso que ya se mandó antes de que se conectara.
 const pendingCalls = new Map(); // unitId -> timeout handle
-const RING_TIMEOUT_MS = 45000;
+const RING_TIMEOUT_MS = 90000;
 
 function startPendingCall(unit) {
   clearPendingCall(unit);
