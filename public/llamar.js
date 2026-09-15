@@ -1,4 +1,4 @@
-const STUN_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
+ const STUN_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
 const unit = new URLSearchParams(location.search).get('unit');
 let ws, pc, localStream;
@@ -24,15 +24,36 @@ unitTagCall.textContent = unit;
 function connectWS() {
   ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
   ws.onopen = () => statusDot.classList.add('on');
-  ws.onclose = () => statusDot.classList.remove('on');
+  ws.onclose = () => {
+    statusDot.classList.remove('on');
+    setTimeout(connectWS, 1500); // el server gratuito puede "dormirse"; reintentamos solos
+  };
   ws.onmessage = (ev) => handleMessage(JSON.parse(ev.data));
+}
+
+// Si el servidor estaba "dormido" (plan gratuito), la primera conexión puede
+// tardar unos segundos en levantar. Esperamos a que esté realmente abierta
+// antes de mandar nada, en vez de fallar en silencio.
+function wsReady() {
+  return new Promise((resolve) => {
+    if (ws && ws.readyState === WebSocket.OPEN) return resolve();
+    const check = setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        clearInterval(check);
+        resolve();
+      }
+    }, 200);
+  });
+}
+function wsSend(data) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
 }
 
 async function startCall() {
   startBtn.disabled = true;
   startCard.classList.add('hidden');
   callCard.classList.remove('hidden');
-  callStatus.textContent = 'Llamando…';
+  callStatus.textContent = 'Conectando…';
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -42,8 +63,16 @@ async function startCall() {
   }
   localVideo.srcObject = localStream;
 
-  ws.send(JSON.stringify({ type: 'join', unit, role: 'portero' }));
-  ws.send(JSON.stringify({ type: 'call', unit }));
+  // Si el sistema estaba inactivo puede tardar hasta ~30-50s en despertar
+  const slowNotice = setTimeout(() => {
+    callStatus.textContent = 'El sistema estaba inactivo, esperá unos segundos…';
+  }, 3000);
+  await wsReady();
+  clearTimeout(slowNotice);
+
+  callStatus.textContent = 'Llamando…';
+  wsSend({ type: 'join', unit, role: 'portero' });
+  wsSend({ type: 'call', unit });
 }
 
 async function startOffer() {
@@ -51,7 +80,7 @@ async function startOffer() {
   localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
   pc.ontrack = (ev) => { remoteVideo.srcObject = ev.streams[0]; };
   pc.onicecandidate = (ev) => {
-    if (ev.candidate) ws.send(JSON.stringify({ type: 'ice-candidate', unit, candidate: ev.candidate }));
+    if (ev.candidate) wsSend({ type: 'ice-candidate', unit, candidate: ev.candidate });
   };
   pc.onconnectionstatechange = () => {
     if (pc.connectionState === 'connected') callStatus.textContent = 'En videollamada';
@@ -60,7 +89,7 @@ async function startOffer() {
 
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
-  ws.send(JSON.stringify({ type: 'offer', unit, sdp: offer }));
+  wsSend({ type: 'offer', unit, sdp: offer });
 }
 
 async function handleMessage(msg) {
@@ -86,7 +115,7 @@ async function handleMessage(msg) {
 function endCall() {
   if (pc) { pc.close(); pc = null; }
   if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  ws.send(JSON.stringify({ type: 'hangup', unit }));
+  wsSend({ type: 'hangup', unit });
   remoteVideo.srcObject = null;
   localVideo.srcObject = null;
   startBtn.disabled = false;
