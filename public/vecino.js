@@ -1,3 +1,4 @@
+
 const STUN_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
 
 const unit = new URLSearchParams(location.search).get('unit');
@@ -34,6 +35,9 @@ function connectWS() {
   ws.onclose = () => { statusDot.classList.remove('on'); setTimeout(connectWS, 2000); };
   ws.onmessage = (ev) => handleMessage(JSON.parse(ev.data));
 }
+function wsSend(data) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
+}
 
 function showRing() {
   idleCard.classList.add('hidden');
@@ -59,13 +63,13 @@ async function acceptCall() {
   localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
   pc.ontrack = (ev) => { remoteVideo.srcObject = ev.streams[0]; };
   pc.onicecandidate = (ev) => {
-    if (ev.candidate) ws.send(JSON.stringify({ type: 'ice-candidate', unit, candidate: ev.candidate }));
+    if (ev.candidate) wsSend({ type: 'ice-candidate', unit, candidate: ev.candidate });
   };
   pc.onconnectionstatechange = () => {
     if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) endCall();
   };
 
-  ws.send(JSON.stringify({ type: 'ready', unit }));
+  wsSend({ type: 'ready', unit });
 }
 
 async function handleMessage(msg) {
@@ -79,7 +83,7 @@ async function handleMessage(msg) {
       await pc.setRemoteDescription(msg.sdp);
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-      ws.send(JSON.stringify({ type: 'answer', unit, sdp: answer }));
+      wsSend({ type: 'answer', unit, sdp: answer });
       break;
     case 'ice-candidate':
       if (pc) { try { await pc.addIceCandidate(msg.candidate); } catch {} }
@@ -99,8 +103,8 @@ function endCall() {
 }
 
 acceptBtn.onclick = acceptCall;
-declineBtn.onclick = () => { ws.send(JSON.stringify({ type: 'hangup', unit })); resetToIdle(); };
-hangupBtn.onclick = () => { ws.send(JSON.stringify({ type: 'hangup', unit })); endCall(); };
+declineBtn.onclick = () => { wsSend({ type: 'hangup', unit }); resetToIdle(); };
+hangupBtn.onclick = () => { wsSend({ type: 'hangup', unit }); endCall(); };
 
 // --- Avisos push: se activan una sola vez, no exponen ningún número ---
 function urlBase64ToUint8Array(base64String) {
